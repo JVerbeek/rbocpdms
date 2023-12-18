@@ -15,9 +15,9 @@ from scipy import special
 from scipy import linalg
 from scipy import stats
 import scipy
-from probability_model import ProbabilityModel
-from nearestPD import NPD
-from BVAR_NIG import BVARNIG
+from rbocpdms.probability_model import ProbabilityModel
+from rbocpdms.nearestPD import NPD
+from rbocpdms.BVAR_NIG import BVARNIG
 
 
 class BVARNIGDPD(BVARNIG):
@@ -323,7 +323,7 @@ class BVARNIGDPD(BVARNIG):
         self.L_0_inv = np.linalg.cholesky(self.prior_var_beta)
         #syntax: the 1 stands for 'lower triangular', since the np cholesky
         #        decomposition returns lower triangular matrices
-        self.L_0 = scipy.linalg.lapack.clapack.dtrtri(self.L_0_inv, 1)[0]
+        self.L_0 = scipy.linalg.lapack.dtrtri(self.L_0_inv, 1)[0]
         self.prior_var_beta_inv = np.matmul(np.transpose(self.L_0), 
                                             (self.L_0))
         
@@ -370,7 +370,7 @@ class BVARNIGDPD(BVARNIG):
         NOTE: Will be O(S * p^2), so probably better to use direct inversion, 
         since we can either invert directly O(S^3) or via Woodbury (O(p^3))"""
         
-        L_inv = scipy.linalg.lapack.clapack.dtrtri(self.L_rt[0,:,:], 1)[0]
+        L_inv = scipy.linalg.lapack.dtrtri(self.L_rt[0,:,:], 1)[0]
         XL = np.matmul(self.X_t, L_inv)
         
         """Note: Q_0 and R_0 are the decomposition of the posterior predictive
@@ -383,7 +383,7 @@ class BVARNIGDPD(BVARNIG):
                 )     
         #syntax: the 0 stands for 'upper triangular', since the QR
         #        decomposition returns upper triangular matrices
-        R_0_inv = scipy.linalg.lapack.clapack.dtrtri(R_0, 0)[0]
+        R_0_inv = scipy.linalg.lapack.dtrtri(R_0, 0)[0]
         C_0_inv = (self.a_rt[0]/self.b_rt[0]) * (
                       #inverse of QR = R^-1 * Q^T, as Q orthogonal
                       np.matmul(R_0_inv, np.transpose(Q_0))
@@ -1527,7 +1527,7 @@ class BVARNIGDPD(BVARNIG):
             #syntax: the 1 stands for 'lower triangular', since the np cholesky
             #        decomposition returns lower triangular matrices
             if p>1:
-                Li_inv =  scipy.linalg.lapack.clapack.dtrtri(Li, 1)[0]
+                Li_inv =  scipy.linalg.lapack.dtrtri(Li, 1)[0]
             else:
                 Li_inv = 1.0/Li
             self.Rinv[ind,:,:] = np.matmul(np.transpose(Li_inv), Li_inv)        
@@ -1623,7 +1623,7 @@ class BVARNIGDPD(BVARNIG):
             variance (without the scaling factor a/b)"""    
             if self.S1*self.S2 > 1 or self.num_regressors > 1:
                 """Unless we only fit a single constant, do this"""
-                L_inv = scipy.linalg.lapack.clapack.dtrtri(L_rt[r,:,:], 1)[0]
+                L_inv = scipy.linalg.lapack.dtrtri(L_rt[r,:,:], 1)[0]
                 XL = np.matmul(self.X_tp1, L_inv)
                 
                 Q, R = np.linalg.qr(
@@ -1637,7 +1637,7 @@ class BVARNIGDPD(BVARNIG):
                 (+ log determinant)of the posterior predictive variance"""            
                 #syntax: the 0 stands for 'upper triangular', since the QR
                 #        decomposition returns upper triangular matrices
-                R_inv = scipy.linalg.lapack.clapack.dtrtri(R, 0)[0]
+                R_inv = scipy.linalg.lapack.dtrtri(R, 0)[0]
                 C_t_inv =  (
                           #inverse of QR = R^-1 * Q^T, as Q orthogonal
                           np.matmul(R_inv, np.transpose(Q))
@@ -1742,7 +1742,7 @@ class BVARNIGDPD(BVARNIG):
             (+ log determinant)of the posterior predictive variance"""            
             #syntax: the 0 stands for 'upper triangular', since the QR
             #        decomposition returns upper triangular matrices
-            R_inv = scipy.linalg.lapack.clapack.dtrtri(R, 0)[0]
+            R_inv = scipy.linalg.lapack.dtrtri(R, 0)[0]
             
             C_t_inv_r0 = (
                       np.matmul(R_inv, np.transpose(Q))
@@ -2142,7 +2142,7 @@ class BVARNIGDPD(BVARNIG):
             P(r_t|y_1:t, m_t) = P(r_t,y_1:t,m_t)\P(y_1:t, m_t), where we get
             P(y_1:t, m_t) = P(y_1:t|m_t)P(m_t) by summing the joint probs"""
             self.model_log_evidence_p_eps = (
-                scipy.misc.logsumexp(joint_log_probs))
+                scipy.special.logsumexp(joint_log_probs))
             
             """STEP 2.3: Get the posterior expectation for alpha + eps, i.e.
             E[y_t+1|y_1:t, m_t, alpha_t + eps]. On the detector level, we 
@@ -2179,7 +2179,7 @@ class BVARNIGDPD(BVARNIG):
             
             """STEP 3.2: as before"""
             self.model_log_evidence_m_eps = (
-                    scipy.misc.logsumexp(joint_log_probs))
+                    scipy.special.logsumexp(joint_log_probs))
             
             """STEP 3.3: Get the posterior expectation for alpha + eps"""
             self.post_mean_m_eps = np.sum(
@@ -2215,7 +2215,7 @@ class BVARNIGDPD(BVARNIG):
             """
             #syntax: the 1 stands for 'lower triangular', since the np cholesky
             #        decomposition returns lower triangular matrices
-            L_inv = scipy.linalg.lapack.clapack.dtrtri(self.L_rt[r,:,:], 1)[0]
+            L_inv = scipy.linalg.lapack.dtrtri(self.L_rt[r,:,:], 1)[0]
             XL = np.matmul(self.X_tp1, L_inv)
             post_var[r,:,:] = (self.b_rt[r]/self.a_rt[r])*(
                     np.identity(self.S1*self.S2) + 
@@ -2319,7 +2319,7 @@ class BVARNIGDPD(BVARNIG):
 
         self.retained_run_lengths = (
                     self.retained_run_lengths[kept_run_lengths])
-        self.model_log_evidence = scipy.misc.logsumexp(
+        self.model_log_evidence = scipy.special.logsumexp(
                         self.joint_log_probabilities )
         
         
@@ -2400,7 +2400,7 @@ class BVARNIGDPD(BVARNIG):
         lower_ind = np.tril_indices(p, 0)  
         Ln = np.zeros((p,p))
         Ln[lower_ind] = vech_Ln
-        Linv = scipy.linalg.lapack.clapack.dtrtri(Ln, 1)[0]
+        Linv = scipy.linalg.lapack.dtrtri(Ln, 1)[0]
         
         
         """STEP 2: Compute the E-quantities not depending on observations"""
@@ -2459,7 +2459,7 @@ class BVARNIGDPD(BVARNIG):
                     ))
             else:
                 sign = np.sign(E3)*np.sign(K)
-                sum_, sign_ = scipy.misc.logsumexp(
+                sum_, sign_ = scipy.special.logsumexp(
                         a = np.log(np.abs(E3)) + (an + 0.5*d*alpha)*(np.log(bn) - 
                                    np.log(np.abs(K))),
                         b = sign,
@@ -2660,7 +2660,7 @@ class BVARNIGDPD(BVARNIG):
 #            print("spec ind", specified_indices)
 #            print(Li)
             if p>1:
-                Li_inv =  scipy.linalg.lapack.clapack.dtrtri(Li, 1)[0]
+                Li_inv =  scipy.linalg.lapack.dtrtri(Li, 1)[0]
             else:
                 Li_inv = 1.0/Li
             Rinv[i,:,:] = np.matmul(np.transpose(Li_inv), Li_inv)        
@@ -2814,7 +2814,7 @@ class BVARNIGDPD(BVARNIG):
                 else:  
                     signs = np.sign(E3) * np.sign(K)
                     sum_1_log, sign =   ( #E2der_m_ba * (
-                        scipy.misc.logsumexp(
+                        scipy.special.logsumexp(
                             a = (
                                 np.log(np.abs(E3)) 
                                 #(self.a_rt[r] + 0.5*self.num_regressors*alpha)*
@@ -2839,7 +2839,7 @@ class BVARNIGDPD(BVARNIG):
                     
                     if np.size(Klarger0)>0:
                         sign_ = np.sign(np.log(K[Klarger0]))*np.sign(E3[Klarger0])
-                        exact_der_part_log, sign_edpl = scipy.misc.logsumexp(
+                        exact_der_part_log, sign_edpl = scipy.special.logsumexp(
                                 a = ( np.log(np.abs(E3[Klarger0])) 
                                       + (an + 0.5*d*alpha)*
                                          (np.log(bn) - np.log(K[Klarger0]))
@@ -2860,7 +2860,7 @@ class BVARNIGDPD(BVARNIG):
                             (bn/K)^([an - eps] + 0.5d*alpha )."""
                     if np.size(Ksmaller0):
                         eps = pow(10,-5)
-                        diff_log, diff_log_sign = scipy.misc.logsumexp(
+                        diff_log, diff_log_sign = scipy.special.logsumexp(
                                 a = np.array([
                                         (an + eps + 0.5*d*alpha) * (
                                             np.log(bn) - np.log(np.abs(K[Ksmaller0]))), 
@@ -2877,7 +2877,7 @@ class BVARNIGDPD(BVARNIG):
                         """Using the above, get the sum of the numerical gradient
                         parts for which K was smaller than 0."""
                         sig = diff_log_sign * np.sign(E3[Ksmaller0])
-                        numerical_der_part_log, sign_ndpl = scipy.misc.logsumexp(
+                        numerical_der_part_log, sign_ndpl = scipy.special.logsumexp(
                                 a = (np.log(np.abs(E3[Ksmaller0])) + diff_log + 
                                      -np.log((2*eps))),
                                 b = sig,
@@ -2890,7 +2890,7 @@ class BVARNIGDPD(BVARNIG):
                             
                     """Finally, get the full sum of derivatives for both the K>0 
                     and K<0 terms"""
-                    sum_part, sum_sgn = scipy.misc.logsumexp(
+                    sum_part, sum_sgn = scipy.special.logsumexp(
                             a = np.array([exact_der_part_log,
                                          numerical_der_part_log]),
                             b = np.array([sign_edpl, sign_ndpl]),
@@ -3076,7 +3076,7 @@ class BVARNIGDPD(BVARNIG):
                 else:            
                             
                     sig = (np.sign(E3) * np.sign(K) )#np.maximum(K, pow(10,-5)))))
-                    sum_1_log, sign_ = scipy.misc.logsumexp(
+                    sum_1_log, sign_ = scipy.special.logsumexp(
                             a = (
                                 np.log(np.abs(E3))
                                 + (np.log(bn) - np.log(np.abs(K)))#np.maximum(K, pow(10,-5))))) 
@@ -3095,7 +3095,7 @@ class BVARNIGDPD(BVARNIG):
                 
                 #RUNTIME OVERFLOW due to E2 and self.K [b^a]   
                     sign = np.sign(E3) * np.sign(K)
-                    sum_2_log, sign_ = scipy.misc.logsumexp(
+                    sum_2_log, sign_ = scipy.special.logsumexp(
                             a = (np.log(np.abs(E3)) + (an + 0.5*alpha+1)*(
                                     np.log(bn) - np.log(np.abs(K)))),
                             b = sign,
@@ -3242,7 +3242,7 @@ class BVARNIGDPD(BVARNIG):
                     #DEBUG: Somehow, an error occurs here 'divide by zero in log'
                     #       which means we get log(0) somewhere. Internally that is
                     #       solved by assigning -np.inf, so there is no issue here
-                    sum_1_log, sign_ = scipy.misc.logsumexp(
+                    sum_1_log, sign_ = scipy.special.logsumexp(
                             a = (np.log(np.abs(E3))[:,np.newaxis] 
                                  + np.log(np.abs(E4der + E5der +E7der))
                                  + (an + 0.5*alpha+1)*(
@@ -3316,7 +3316,7 @@ class BVARNIGDPD(BVARNIG):
         """STEP 1: Compute the prior-dependent (data-independent) quantities,
         i.e. the derivatives of E1, E2, E_4"""
         B = np.outer(betan, betan)
-        L_inv = scipy.linalg.lapack.clapack.dtrtri(Ln, 1)[0]
+        L_inv = scipy.linalg.lapack.dtrtri(Ln, 1)[0]
         #det = np.exp(2 * np.trace(self.L_rt[r,:,:]))
         #Note: Of the extracted indices, only the diagonal is nonzero
         E1der = (np.matmul(
@@ -3413,7 +3413,7 @@ class BVARNIGDPD(BVARNIG):
                 """STEP 3: Log-transformed summation"""
                 sum_1_signs = np.sign(E3der) * np.sign(K)[:,np.newaxis]
                 #needs to be multiplied by E2_m_ba later
-                sum_1, sum_1_sign = scipy.misc.logsumexp(
+                sum_1, sum_1_sign = scipy.special.logsumexp(
                         a = (np.log(np.abs(E3der))  
                             + (np.log(bn) - np.log(np.abs(K)))[:,np.newaxis]*(an + 0.5*d*alpha)
                             - np.log(bn) * (0.5*d*alpha)),
@@ -3424,7 +3424,7 @@ class BVARNIGDPD(BVARNIG):
                         
                 sum_2_signs = np.sign(E4to7der) * np.sign(K)[:,np.newaxis] * (-1)
                 #needs to be multiplied by E2_m_ba later
-                sum_2, sum_2_sign = scipy.misc.logsumexp(
+                sum_2, sum_2_sign = scipy.special.logsumexp(
                         a = (np.log(E3)[:,np.newaxis]
                             + np.log(0.5)
                             + np.log(np.abs(E4to7der)) 
@@ -3439,7 +3439,7 @@ class BVARNIGDPD(BVARNIG):
                 
                 sum_3_signs = np.sign(K)
                 #needs to be multiplied by E2der_m_ba later
-                sum_3, sum_3_sign = scipy.misc.logsumexp(
+                sum_3, sum_3_sign = scipy.special.logsumexp(
                         a = (np.log(E3)
                             + (np.log(bn) - np.log(np.abs(K))) * (an + 0.5 * d * alpha)
                             - np.log(bn) * (0.5 * d * alpha)),
@@ -3448,7 +3448,7 @@ class BVARNIGDPD(BVARNIG):
                         axis=0
                     )
                 
-                sum_sum, sum_sum_sign = scipy.misc.logsumexp(
+                sum_sum, sum_sum_sign = scipy.special.logsumexp(
                         a=np.array([sum_1, sum_2]),
                         b=np.array([sum_1_sign, sum_2_sign]),
                         return_sign = True,
@@ -3820,7 +3820,7 @@ class BVARNIGDPD(BVARNIG):
 #    
 #            signs = np.sign(self.E3) * np.sign(self.K)
 #            sum_1_log, sign =   ( #E2der_m_ba * (
-#                scipy.misc.logsumexp(
+#                scipy.special.logsumexp(
 #                    a = (
 #                        np.log(np.abs(self.E3)) +
 #                        #(self.a_rt[r] + 0.5*self.num_regressors*alpha)*
@@ -3852,7 +3852,7 @@ class BVARNIGDPD(BVARNIG):
 #            
 #            signs_ = np.sign(self.E3) * np.sign(self.K) * np.sign(np.log(self.K))
 #            sum_2_log, sign_ = (
-#                    scipy.misc.logsumexp(
+#                    scipy.special.logsumexp(
 #                        a = (
 #                            np.log(np.abs(self.E3))  
 #                            + (np.log(self.b_rt[r]) - np.log(np.abs(self.K)))
@@ -4051,7 +4051,7 @@ class BVARNIGDPD(BVARNIG):
 #        d = self.S1*self.S2
 #        lower_ind = np.tril_indices(self.num_regressors, 0)  
 #        B = np.outer(self.beta_rt[r,:], self.beta_rt[r,:])
-#        L_inv = scipy.linalg.lapack.clapack.dtrtri(self.L_rt[r,:,:], 1)[0]
+#        L_inv = scipy.linalg.lapack.dtrtri(self.L_rt[r,:,:], 1)[0]
 #        E1der = (np.matmul(
 #                         (np.matmul(
 #                                np.matmul(np.transpose(L_inv), L_inv),
@@ -4160,7 +4160,7 @@ class BVARNIGDPD(BVARNIG):
 #        beta = (self.beta_rt[r,:] + perturbation[:p]).copy()
 #        L = self.L_rt[r,:,:].copy()
 #        L[lower_ind] = L[lower_ind] + perturbation[p:-2]
-#        Linv = scipy.linalg.lapack.clapack.dtrtri(L, 1)[0]
+#        Linv = scipy.linalg.lapack.dtrtri(L, 1)[0]
 #        a = self.a_rt[r] + perturbation[-2]
 #        b = self.b_rt[r] + perturbation[-1]
 #        
@@ -4241,7 +4241,7 @@ class BVARNIGDPD(BVARNIG):
 #                            self.alpha_param * self.XX_t[i,:,:] 
 #                            + np.matmul(L, np.transpose(L))
 #                        )
-#                Rinv = scipy.linalg.lapack.clapack.dtrtri(R, 0)[0]
+#                Rinv = scipy.linalg.lapack.dtrtri(R, 0)[0]
 #                
 #                """inverse of R-matrix"""
 #                #DEBUG: different from R_inv as stored in object? NO!
